@@ -1,16 +1,37 @@
 <html>
   <head>
-    <title>getUserMedia</title>
+    <title>getUserMedia</title>  
+    <style>
+      .highlight{
+        background-color:#dOdOdO
+      }
+    </style>
   </head>
-  <body>
-    <p align="center">
-    <video id="gum-local"autoplay padding-left="150px" padding-top="200px" playsinline></video>
-    </p>
-    <br>
-    <div style="text-align:center"  bgcolor="blue"  >
-    <button id="showVideo"  > Open camera</button>
+  <body onload="onLoad()">
+     <div>
+          <h1><a href="https://baike.baidu.com/item/WebRTC/5522744?fr=aladdin" title="WebRTC Technology">WebRTC Technology</a>
+        <span>getUserMedia</span></h1>
+     <p align="center">
+     <video id="gum-local"autoplay padding-left="150px" padding-top="200px" playsinline></video>
+     </p>
+     <br>
+
+     <div id="output" style="text-align:center"  >
+      <textarea id="msg"></textarea>
+      <button id="sendmsg">发送消息</button>
+      <br>
+     <button id="showVideo" class="highlight" > Open camera</button>
+     <button id="getRoom" class="highlight" > Get Room</button>
+
+     </div>
+     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+     <script src="https://www.antuo.me/webrtc.js"></script>
     </div>
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="webrtc.js"></script>
+    <div style="text-align:center">
+      <span >Copyright &copy;dat 2020 </span> 
+      <a href="https://github.com/biungshenoo/dat"
+       title="View source for this page on GitHub" id="viewSource">View source on GitHub</a>
+    </div>
   </body>
 </html>
+

@@ -23,6 +23,10 @@ const credentials = {
         ca: ca
 };
 
+var nextRoom = 1000;
+
+var roomToWebSockets = new Map();
+var websocketToRoom = new Map();
 
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
@@ -33,6 +37,15 @@ app.get('/', function(req, res){
   else
     res.sendFile(__dirname + '/index.html');
 });
+
+app.get('/r/:roomId', function(req, res){ 
+  if (!req.secure)
+    res.redirect("https://" + req.headers.host + req.url);
+  else
+    res.sendFile(__dirname + '/index.html');
+});
+
+
 
 app.use(express.static('public'));
 
@@ -52,11 +65,68 @@ const wss = new WebSocket.Server({ server: httpsServer });
 
 wss.on('connection', (ws) => {
   console.log('Client connected');
-  ws.on('close', () => console.log('Client disconnected'));
+  ws.on('close', function onClose(ws) { onWebSocketClose(ws); });
+  ws.on('message', function onMessage(message) { onWebSocketMessage(ws, message); });
 });
 
-setInterval(() => {
-  wss.clients.forEach((client) => {
-    client.send(new Date().toTimeString());
-  });
-}, 1000);
+function onWebSocketMessage(ws, message) {
+   console.log('onWebSocketMessage:' + message);
+   var msg = JSON.parse(message);
+   switch(msg.msg_type) {
+     case 'get_room':
+         var websockets = [];
+         websockets.push(ws);
+         roomToWebSockets.set(nextRoom, websockets);
+         websocketToRoom.set(ws,room);
+         var response = {msg_type : 'get_room',
+		         room_number : nextRoom};
+         nextRoom++;
+         ws.send(JSON.stringify(response));
+     break;
+     case 'join_room':
+         var room = msg.room_number;
+         console.log('join room:' + room + ',roomToWebSockets:' + roomToWebSockets + ',message' + msg);
+         var sockets = roomToWebSockets.get(room);
+         console.log('sockets:' + sockets);
+         sockets.push(ws);
+     break;
+     case 'message':
+         var room = msg.room_number;
+         var peerSocket = getPeerSocket(room, ws);
+	 if (peerSocket)
+             peerSocket.send(message);
+     break;
+   }
+}
+
+function onWebSocketClose(ws) {
+	var room = websocketToRoom.get(ws);
+	roomToWebSockets.delete(room);
+	websocketToRoom.delete(ws);
+   console.log('onWebSocketClose:');
+}
+
+function getPeerSocket(room, ws) {
+    if (ws.peer)
+        return;
+    var sockets = roomToWebSockets.get(room);
+    if (sockets && sockets.length == 2) {
+       if (sockets[0] == ws) {
+	  ws.peer= sockets[1];
+	  sockets[1].peer = ws;
+          return sockets[1];
+       }
+       else if (sockets[1] == ws) {
+	  ws.peer = socket[0];
+	  socket[0].peer = ws;
+	  return sockets[0]
+       }
+       else return null;
+    }
+    return null;
+}
+//setInterval(() => {
+//  wss.clients.forEach((client) => {
+//    client.send(new Date().toTimeString());
+//  });
+//}, 1000);
